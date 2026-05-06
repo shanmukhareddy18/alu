@@ -1,184 +1,374 @@
-module Eight_bit_ALU_rtl_design(OPA,OPB,CIN,CLK,RST,CMD,CE,MODE,INP_VALID,COUT,OFLOW,RES,G,E,L,ERR);
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 05/05/2026 10:56:20 AM
+// Design Name: 
+// Module Name: alu
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+module alu #(parameter n=8)(A,B,CIN,CLK,RST,CMD,CE,MODE,INP_VALID,Cout,Oflow,result,g,l,e,error);
 
 
-  input [7:0] OPA,OPB;
-  input CLK,RST,CE,MODE,CIN,INP_VALID;
-  input [3:0] CMD;
-  output reg [8:0] RES = 9'bz;
-  output reg COUT = 1'bz;
-  output reg OFLOW = 1'bz;
-  output reg G = 1'bz;
-  output reg E = 1'bz;
-  output reg L = 1'bz;
-  output reg ERR = 1'bz;
+input [n-1:0] A,B;
+input CLK,RST,CE,MODE,CIN;
+ input [1:0]INP_VALID;
+ input [3:0] CMD;
+ output reg [(2*n)-1:0] result;
+output reg Cout ;
+output reg Oflow;
+output reg g;
+output reg e ;
+output reg l ;
+output reg error ;
+   reg [n-1:0] OPA,OPB;
+   reg [(2*n)-1:0] RES ;
+   reg COUT ;
+   reg OFLOW;
+   reg G;
+   reg E ;
+   reg L ;
+  reg ERR ;
+reg [2:0]cnt=0;
 
-
-  reg [7:0] OPA_1, OPB_1;
-
-    always@(posedge CLK or posedge RST)
-      begin
-       if(RST)                  
-        begin
-            RES=9'b0;
-            COUT=1'b0;
-            OFLOW=1'b0;
-            G=1'b0;
-            E=1'b0;
-            L=1'b0;
-            ERR=1'b0;
-          end
-        else
-         if(!CE)               
-          begin
-            RES=RES;
-            COUT=COUT;
-            OFLOW=OFLOW;
-            G=1'b0;
-            E=1'b0;
-            L=1'b0;
-            ERR=1'b0;
-          end
-
-         else if(MODE)        
-         begin
-           RES=9'bzzzzzzzzz;
-           COUT=1'bz;
-           OFLOW=1'bz;
-           G=1'bz;
-           E=1'bz;
-           L=1'bz;
-           ERR=1'bz;
-          case(CMD)             
-           4'b0000:             
-            begin             
-              RES=OPA+OPB;
-              COUT=RES[8]?1:0;
-            end
-	   4'b0001:             
-            begin
-             OFLOW=(OPA<OPB)?1:0;
-             RES=OPA-OPB;
-            end
-           4'b0010:             
-            begin
-             RES=OPA+OPB+CIN;
-             COUT=RES[8]?1:0;
-            end
-           4'b0011:             
-           begin
-            OFLOW=(OPA<OPB)?1:0;
-            RES=OPA-OPB-CIN;
-           end
-           4'b0100:RES=OPA+1;   
-           4'b0101:RES=OPA-1;   
-           4'b0110:RES=OPB+1;    
-           4'b0111:RES=OPB-1;    
-           4'b1000:              
-           begin
-            RES=9'bzzzzzzzzz;
-            if(OPA==OPB)
-             begin
-               E=1'b1;
-               G=1'bz;
-               L=1'bz;
-             end
-            else if(OPA>OPB)
-             begin
-               E=1'bz;
-               G=1'b1;
-               L=1'bz;
-             end
-            else 
-             begin
-               E=1'bz;
-               G=1'bz;
-               L=1'b1;
-             end
-           end
-           default:
-            begin
-            RES=9'bzzzzzzzzz;
-            COUT=1'bz;
-            OFLOW=1'bz;
-            G=1'bz;
-            E=1'bz;
-            L=1'bz;
-            ERR=1'bz;
-           end
-          endcase
-         end
-
-        else          
-        begin 
-           RES=9'bzzzzzzzzz;
-           COUT=1'bz;
-           OFLOW=1'bz;
-           G=1'bz;
-           E=1'bz;
-           L=1'bz;
-           ERR=1'bz;
-           case(CMD)    
-             4'b0000:RES={1'b0,OPA&OPB};     
-             4'b0001:RES={1'b0,~(OPA&OPB)};  
-             4'b0010:RES={1'b0,OPA|OPB};     
-             4'b0011:RES={1'b0,~(OPA|OPB)}; 
-             4'b0100:RES={1'b0,OPA^OPB};    
-             4'b0101:RES={1'b0,~(OPA^OPB)};  
-             4'b0110:RES={1'b0,~OPA};        
-             4'b0111:RES={1'b0,~OPB};        
-             4'b1000:RES={1'b0,OPA>>1};      
-             4'b1001:RES={1'b0,OPA<<1};      
-             4'b1010:RES={1'b0,OPB>>1};      
-             4'b1011:RES={1'b0,OPB<<1};      
-             4'b1100:                        
-             begin 
-               if(OPB[0])
-                 OPA_1 = {OPA[6:0], OPA[7]};
-               else
-                 OPA_1 = OPA;
-
-               if(OPB[1])
-                 OPB_1 =  {OPA_1[5:0], OPA_1[7:6]}; 
-               else
-                 OPB_1= OPA_1;
-
-               if(OPB[2])
-                 RES =  {OPB_1[3:0], OPB_1[7:4]} ;
-               else
-                 RES = OPB_1;
-
-               if(OPB[4] | OPB[5] | OPB[6] | OPB[7])
-                 ERR=1'b1;
-             end
-             4'b1101:                        
-             begin
-               if(OPB[0])
-                 OPA_1 = {OPA[0], OPA[7:1]};
-               else
-                 OPA_1 = OPA;
-               if(OPB[1])
-                 OPB_1 =  {OPA_1[1:0], OPA_1[7:2]}; 
-               else
-                 OPB_1= OPA_1;
-               if(OPB[2])
-                 RES =  {OPB_1[3:0], OPB_1[7:4]} ;
-               else
-                 RES = OPB_1;
-               if(OPB[4] | OPB[5] | OPB[6] | OPB[7])
-                 ERR=1'b1;
-             end
-             default:    
-               begin
-               RES=9'bzzzzzzzzz;
-               COUT=1'bz;
-               OFLOW=1'bz;
-               G=1'bz;
-               E=1'bz;
-               L=1'bz;
-               ERR=1'bz;
-               end
-          endcase
+  reg signed [n-1:0] SOPA, SOPB;
+always@(posedge CLK)
+begin
+ if(RST)
+    begin
+        result<=0;
+        g<=0;
+        l<=0;
+        e<=0;
+        error<=0;
+        Cout<=0;
+        Oflow<=0;
+        cnt<=0;
      end
-    end
-   end
-endmodule
+   else
+    begin
+        if(CE)
+         begin
+           if (MODE && (CMD == 4'd9 || CMD == 4'd10))
+            begin
+              if (cnt == 0) begin
+                OPA <= A;
+                OPB <= B;
+                SOPA <= A;
+                SOPB <= B;
+                cnt <= 1;
+                end
+               else if (cnt == 1) begin
+                  cnt <= 2;
+                 end
+               else if (cnt == 2) 
+                begin
+                        result <= RES;
+                        Cout   <= COUT;
+                        Oflow  <= OFLOW;
+                        g <= G; l <= L; e <= E;
+                        error <= ERR;
+                        cnt<=0;
+                 end
+              end 
+           else 
+             begin
+                 OPA<=A;
+                 OPB<=B;
+                 SOPA<=A;
+                 SOPB<=B;
+                result<=RES;
+                g<=G;
+                l<=L;
+                e<=E;
+                error<=ERR;
+                Cout<=COUT;
+                Oflow<=OFLOW;
+                cnt<=0;
+            end
+       end
+       end
+  end 
+ 
+    always@(*)
+      begin
+          G=0;
+          L=0;
+          E=0;
+          COUT=0;
+          OFLOW=0;
+          RES=0;
+          ERR=0;
+		   if(MODE)
+		      begin
+			   case(CMD)
+			    4'd0:
+			      if(INP_VALID==2'b11)
+			       begin
+			         RES=OPA+OPB;  
+			         COUT=RES[n];
+			       end
+			      else
+			        ERR=1;
+			     4'd1:
+			       if(INP_VALID==2'b11)
+			       begin
+			         RES=OPA-OPB;  
+			         OFLOW=OPA<OPB;
+			       end
+			       else
+			        ERR=1;
+			     4'd2:
+			      if(INP_VALID==2'b11)
+			        begin
+			         RES=OPA+OPB+CIN;  
+			         COUT=RES[n];
+			        end
+			        else
+			        ERR=1;
+			     4'd3:
+			      if(INP_VALID==2'b11)
+			         begin
+			         RES=OPA-OPB-CIN;  
+			         OFLOW=OPA<(OPB+CIN);
+			         end
+			        else
+			        ERR=1;
+			     4'd4:
+			      if((INP_VALID==2'b11) || (INP_VALID==2'b01))
+			        begin
+			         RES=OPA+1;  
+			         OFLOW=0;
+			         COUT=RES[n];
+			         end
+			        else
+			        ERR=1;
+			     4'd5:
+			        if((INP_VALID==2'b11) || (INP_VALID==2'b01))
+			         begin
+			         RES=OPA-1;  
+			         
+			         end
+			        else
+			        ERR=1;
+			     4'd6:
+			       if((INP_VALID==2'b11) || (INP_VALID==2'b10))
+			         begin
+			         RES=OPB+1;  
+			         OFLOW=0;
+			         COUT=RES[n];
+			         end
+			       else
+			        ERR=1;
+			     4'd7:
+			       if((INP_VALID==2'b11) || (INP_VALID==2'b10))
+			         begin
+			         RES=OPB-1; 
+			        
+			          end
+			        else
+			        ERR=1;
+			     4'd8:
+			      begin
+			      RES=0;
+			       if(INP_VALID==2'b11)
+			        begin
+                      if(OPA==OPB)
+                       begin
+                       E=1'b1;
+                       G=1'b0; 
+                       L=1'b0;
+                       end
+                      else if(OPA>OPB)
+                       begin
+                        E=1'b0;
+                        G=1'b1;
+                        L=1'b0;
+                        end
+                       else
+                        begin
+                        E=1'b0;
+                        G=1'b0;
+                        L=1'b1;
+                        end
+                     end
+                   else
+                     ERR=1;
+                 end
+			     4'd9:
+			     begin
+			      if(INP_VALID==2'b11)
+			       begin
+			         RES=(OPA+1)*(OPB+1);
+			       end
+			      else
+			        ERR=1;
+			     end
+			     4'd10:
+			      begin
+			       if(INP_VALID==2'b11)
+			        begin
+			         RES=(OPA<<1)*(OPB);
+			        end
+			       else
+			        ERR=1;
+			      end
+			     4'd11:
+			      begin
+			       if(INP_VALID==2'b11)
+			        begin
+			          RES=SOPA+SOPB;
+			          {G,L,E}={SOPA > SOPB, SOPA < SOPB, SOPA == SOPB};
+			          OFLOW=(SOPA[n-1]==SOPB[n-1])&&(SOPA[n-1]!=RES[n-1]);
+			          COUT=RES[n];
+			         end
+			        else
+			          ERR=1;
+			       end
+			      4'd12:
+			         begin
+			           if(INP_VALID==2'b11)
+			            begin
+			              RES=SOPA-SOPB;
+			              {G,L,E}={SOPA > SOPB, SOPA < SOPB, SOPA == SOPB};
+			             OFLOW=(SOPA[n-1]==SOPB[n-1])&&(SOPA[n-1]!=RES[n-1]);
+			            end
+			           else
+			             ERR=1;
+			          end
+			     endcase
+			    end
+			   else
+			    begin
+			       RES=0;
+                   COUT=1'b0;
+                   OFLOW=1'b0;
+                   G=1'b0;
+                   E=1'b0;
+                   L=1'b0;
+                   ERR=1'b0;
+                  case(CMD)    
+                     4'b0000: if(INP_VALID==2'b11)
+                                  RES={1'b0,OPA&OPB};   
+                               else
+                                 ERR=1;  
+                     4'b0001:if(INP_VALID==2'b11)
+                                 RES={1'b0,~(OPA&OPB)};  
+                             else
+                               ERR=1;
+                     4'b0010:if(INP_VALID==2'b11)
+                                  RES={1'b0,OPA|OPB};  
+                               else
+                                 ERR=1;  
+                     4'b0011:if(INP_VALID==2'b11)
+                                  RES={1'b0,~(OPA|OPB)};  
+                              else
+                                ERR=1;
+                     4'b0100:if(INP_VALID==2'b11)
+                                RES={1'b0,OPA^OPB};   
+                              else
+                                ERR=1;  
+                     4'b0101:if(INP_VALID==2'b11)
+                              RES={1'b0,~(OPA^OPB)};  
+                             else
+                                ERR=1;
+                     4'b0110:if(INP_VALID==2'b11 || INP_VALID==2'b01)
+                                 RES={1'b0,~OPA}; 
+                              else
+                                 ERR=1;       
+                     4'b0111:if(INP_VALID==2'b11 || INP_VALID==2'b10)
+                                 RES={1'b0,~OPB};  
+                             else
+                                ERR=1;      
+                     4'b1000:if(INP_VALID==2'b11 || INP_VALID==2'b01)
+                                     RES={1'b0,OPA>>1}; 
+                             else
+                                ERR=1;     
+                     4'b1001:if(INP_VALID==2'b11 || INP_VALID==2'b01)
+                                 RES={1'b0,OPA<<1};      
+                              else 
+                                ERR=1;
+                     4'b1010:if(INP_VALID==2'b11 || INP_VALID==2'b10)
+                                  RES={1'b0,OPB>>1};      
+                              else
+                                  ERR=1;
+                     4'b1011:if(INP_VALID==2'b11 || INP_VALID==2'b10)
+                                  RES={1'b0,OPB<<1};      
+                             else
+                                 ERR=1;
+                     4'b1100:                       
+                         begin 
+                         if(INP_VALID==2'b11)
+                            casex(OPB[3:0])
+                              4'bx000:
+                                 RES=OPA;
+                              4'bx001:
+                                RES=(OPA<<(1%n))|(OPA>>(n-(1%n)));
+                              4'bx010:
+                                 RES=(OPA<<(2%n))|(OPA>>(n-(2%n))); 
+                              4'bx011:
+                                 RES=(OPA<<(3%n))|(OPA>>(n-(3%n)));
+                             4'bx100:
+                                 RES=(OPA<<(4%n))|(OPA>>(n-(4%n)));
+                              4'bx101:
+                                 RES=(OPA<<(5%n))|(OPA>>(n-(5%n)));
+                             4'bx110:
+                                 RES=(OPA<<(6%n))|(OPA>>(n-(6%n)));
+                              4'bx111:
+                                 RES=(OPA<<(7%n))|(OPA>>(n-(7%n)));
+                              default:ERR=1;
+                             endcase
+                            else
+                              ERR=1;
+                          end
+                    4'b1101:                       
+                         begin 
+                         if(INP_VALID==2'b11)
+                            casex(OPB[3:0])
+                              4'bx000:
+                                 RES=OPA;
+                              4'bx001:
+                                RES=(OPA>>(1%n))|(OPA<<(n-(1%n)));
+                              4'bx010:
+                                 RES=(OPA>>(2%n))|(OPA<<(n-(2%n))); 
+                              4'bx011:
+                                 RES=(OPA>>(3%n))|(OPA<<(n-(3%n)));
+                              4'bx100:
+                                 RES=(OPA>>(4%n))|(OPA<<(n-(4%n)));
+                              4'bx101:
+                                 RES=(OPA>>(5%n))|(OPA<<(n-(5%n)));
+                              4'bx110:
+                                 RES=(OPA>>(6%n))|(OPA<<(n-(6%n)));
+                              4'bx111:
+                                 RES=(OPA>>(7%n))|(OPA<<(n-(7%n)));
+                              default:ERR=1;
+                            endcase
+                           else
+                              ERR=1;
+                         end
+                  endcase
+              end
+           end
+ endmodule
+                
+                         
+                        
+                           
+                              
+                              
+
+			   
+			      
+
