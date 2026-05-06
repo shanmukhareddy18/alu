@@ -229,10 +229,10 @@ begin
 			      begin
 			       if(INP_VALID==2'b11)
 			        begin
-			          RES=SOPA+SOPB;
+			           RES[n-1:0]=SOPA+SOPB;
+			           RES[(2*n)-1:n]={n{RES[n-1]}};
 			          {G,L,E}={SOPA > SOPB, SOPA < SOPB, SOPA == SOPB};
 			          OFLOW=(SOPA[n-1]==SOPB[n-1])&&(SOPA[n-1]!=RES[n-1]);
-			          COUT=RES[n];
 			         end
 			        else
 			          ERR=1;
@@ -241,9 +241,10 @@ begin
 			         begin
 			           if(INP_VALID==2'b11)
 			            begin
-			              RES=SOPA-SOPB;
+			              RES[n-1:0]=SOPA-SOPB;
+			              RES[(2*n)-1:n]={n{RES[n-1]}};
 			              {G,L,E}={SOPA > SOPB, SOPA < SOPB, SOPA == SOPB};
-			             OFLOW=(SOPA[n-1]==SOPB[n-1])&&(SOPA[n-1]!=RES[n-1]);
+			             OFLOW=(SOPA[n-1]!=SOPB[n-1])&&(SOPA[n-1]!=RES[n-1]);
 			            end
 			           else
 			             ERR=1;
@@ -371,4 +372,3 @@ begin
 
 			   
 			      
-
