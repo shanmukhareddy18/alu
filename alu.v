@@ -1,26 +1,6 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 05/05/2026 10:56:20 AM
-// Design Name: 
-// Module Name: alu
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
 module alu #(parameter n=8)(A,B,CIN,CLK,RST,CMD,CE,MODE,INP_VALID,Cout,Oflow,result,g,l,e,error);
-
 
 input [n-1:0] A,B;
 input CLK,RST,CE,MODE,CIN;
@@ -149,34 +129,28 @@ begin
 			     4'd4:
 			      if((INP_VALID==2'b11) || (INP_VALID==2'b01))
 			        begin
-			         RES=OPA+1;  
-			         OFLOW=0;
-			         COUT=RES[n];
+			         RES[n-1:0]=OPA+1;  
 			         end
 			        else
 			        ERR=1;
 			     4'd5:
 			        if((INP_VALID==2'b11) || (INP_VALID==2'b01))
 			         begin
-			         RES=OPA-1;  
-			         
+			         RES[n-1:0]=OPA-1;  
 			         end
 			        else
 			        ERR=1;
 			     4'd6:
 			       if((INP_VALID==2'b11) || (INP_VALID==2'b10))
 			         begin
-			         RES=OPB+1;  
-			         OFLOW=0;
-			         COUT=RES[n];
+			         RES[n-1:0]=OPB+1;  
 			         end
 			       else
 			        ERR=1;
 			     4'd7:
 			       if((INP_VALID==2'b11) || (INP_VALID==2'b10))
 			         begin
-			         RES=OPB-1; 
-			        
+			         RES[n-1:0]=OPB-1; 
 			          end
 			        else
 			        ERR=1;
@@ -363,12 +337,3 @@ begin
               end
            end
  endmodule
-                
-                         
-                        
-                           
-                              
-                              
-
-			   
-			      
