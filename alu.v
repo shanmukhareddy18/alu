@@ -22,7 +22,7 @@ output reg error ;
    reg L ;
   reg ERR ;
 reg [2:0]cnt=0;
-
+reg signed [(2*n)-1:0]sres;
   reg signed [n-1:0] SOPA, SOPB;
 always@(posedge CLK)
 begin
@@ -203,8 +203,8 @@ begin
 			      begin
 			       if(INP_VALID==2'b11)
 			        begin
-			           RES[n-1:0]=SOPA+SOPB;
-			           RES[(2*n)-1:n]={n{RES[n-1]}};
+			           sres=SOPA+SOPB;
+			           RES=sres;
 			          {G,L,E}={SOPA > SOPB, SOPA < SOPB, SOPA == SOPB};
 			          OFLOW=(SOPA[n-1]==SOPB[n-1])&&(SOPA[n-1]!=RES[n-1]);
 			         end
@@ -215,8 +215,8 @@ begin
 			         begin
 			           if(INP_VALID==2'b11)
 			            begin
-			              RES[n-1:0]=SOPA-SOPB;
-			              RES[(2*n)-1:n]={n{RES[n-1]}};
+			             sres=SOPA-SOPB;
+			           RES=sres;
 			              {G,L,E}={SOPA > SOPB, SOPA < SOPB, SOPA == SOPB};
 			             OFLOW=(SOPA[n-1]!=SOPB[n-1])&&(SOPA[n-1]!=RES[n-1]);
 			            end
@@ -337,3 +337,4 @@ begin
               end
            end
  endmodule
+                
