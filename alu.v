@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module alu #(parameter n=8)(A,B,CIN,CLK,RST,CMD,CE,MODE,INP_VALID,Cout,Oflow,result,g,l,e,error);
-
+localparam RW = $clog2(n);
 input [n-1:0] A,B;
 input CLK,RST,CE,MODE,CIN;
  input [1:0]INP_VALID;
@@ -285,51 +285,15 @@ begin
                                  ERR=1;
                      4'b1100:                       
                          begin 
-                         if(INP_VALID==2'b11)
-                            casex(OPB[3:0])
-                              4'bx000:
-                                 RES=OPA;
-                              4'bx001:
-                                RES=(OPA<<(1%n))|(OPA>>(n-(1%n)));
-                              4'bx010:
-                                 RES=(OPA<<(2%n))|(OPA>>(n-(2%n))); 
-                              4'bx011:
-                                 RES=(OPA<<(3%n))|(OPA>>(n-(3%n)));
-                             4'bx100:
-                                 RES=(OPA<<(4%n))|(OPA>>(n-(4%n)));
-                              4'bx101:
-                                 RES=(OPA<<(5%n))|(OPA>>(n-(5%n)));
-                             4'bx110:
-                                 RES=(OPA<<(6%n))|(OPA>>(n-(6%n)));
-                              4'bx111:
-                                 RES=(OPA<<(7%n))|(OPA>>(n-(7%n)));
-                              default:ERR=1;
-                             endcase
+                         if(INP_VALID==2'b11 || ~|OPB[n-1:RW])
+                              RES = (OPA << OPB[RW-1:0] | OPA >> (n - OPB[RW-1:0])) & {n{1'b1}};
                             else
                               ERR=1;
                           end
                     4'b1101:                       
                          begin 
-                         if(INP_VALID==2'b11)
-                            casex(OPB[3:0])
-                              4'bx000:
-                                 RES=OPA;
-                              4'bx001:
-                                RES=(OPA>>(1%n))|(OPA<<(n-(1%n)));
-                              4'bx010:
-                                 RES=(OPA>>(2%n))|(OPA<<(n-(2%n))); 
-                              4'bx011:
-                                 RES=(OPA>>(3%n))|(OPA<<(n-(3%n)));
-                              4'bx100:
-                                 RES=(OPA>>(4%n))|(OPA<<(n-(4%n)));
-                              4'bx101:
-                                 RES=(OPA>>(5%n))|(OPA<<(n-(5%n)));
-                              4'bx110:
-                                 RES=(OPA>>(6%n))|(OPA<<(n-(6%n)));
-                              4'bx111:
-                                 RES=(OPA>>(7%n))|(OPA<<(n-(7%n)));
-                              default:ERR=1;
-                            endcase
+                         if(INP_VALID==2'b11 || ~|OPB[n-1:RW])
+                               RES = (OPA >> OPB[RW-1:0] | OPA << (n - OPB[RW-1:0])) & {n{1'b1}};
                            else
                               ERR=1;
                          end
@@ -337,4 +301,3 @@ begin
               end
            end
  endmodule
-                
