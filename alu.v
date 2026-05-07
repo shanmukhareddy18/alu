@@ -1,11 +1,11 @@
 `timescale 1ns / 1ps
 
-module alu #(parameter n=8)(A,B,CIN,CLK,RST,CMD,CE,MODE,INP_VALID,Cout,Oflow,result,g,l,e,error);
+module alu #(parameter n=8,c=4)(A,B,CIN,CLK,RST,CMD,CE,MODE,INP_VALID,Cout,Oflow,result,g,l,e,error);
 localparam RW = $clog2(n);
 input [n-1:0] A,B;
 input CLK,RST,CE,MODE,CIN;
  input [1:0]INP_VALID;
- input [3:0] CMD;
+	input [c-1:0] CMD;
  output reg [(2*n)-1:0] result;
 output reg Cout ;
 output reg Oflow;
