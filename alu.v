@@ -223,6 +223,7 @@ begin
 			           else
 			             ERR=1;
 			          end
+				   default: ERR=1;
 			     endcase
 			    end
 			   else
@@ -297,6 +298,7 @@ begin
                            else
                               ERR=1;
                          end
+					default: ERR=1;
                   endcase
               end
            end
