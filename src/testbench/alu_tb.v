@@ -1,10 +1,9 @@
 `timescale 1ns/1ps
-//`include "ALU.v"
-//`include "alu_refer.v"
+`include "ALU.v"
+`include "alu_refer.v"
 
 module alu_testbench;
 
-    // DUT signals
     reg [7:0] OPA, OPB;
     reg CLK, RST, CE, MODE, CIN;
     reg [1:0] INV;
@@ -12,12 +11,11 @@ module alu_testbench;
     wire [15:0] RES_dut;
     wire COUT_dut, OFLOW_dut, G_dut, E_dut, L_dut, ERR_dut;
 
-    // Reference model signals
     wire [15:0] RES_ref;
     wire COUT_ref, OFLOW_ref, G_ref, E_ref, L_ref, ERR_ref;
     
     reg f;
-    // Test counters
+
     integer pass_count = 0;
     integer fail_count = 0;
     integer test_count = 0;
@@ -28,7 +26,6 @@ module alu_testbench;
         .RES(RES_dut), .OFLOW(OFLOW_dut),.COUT(COUT_dut), .G(G_dut), .L(L_dut), .E(E_dut), .ERR(ERR_dut));
 
 
-    // Reference model instantiation
     alu_refer m2(
         .RST(RST),.CE(CE),
         .OPA(OPA), .OPB(OPB), .CIN(CIN),
@@ -237,42 +234,40 @@ task test_mult();
         end
     endtask
 
-    task apply_test_mul(
-        input [7:0] a, b,
-        input [3:0] cmd,
-        input [80*8:1] test_name
-    );
-        begin
-            @(posedge CLK);
-            OPA = a;
-            OPB = b;
-            CMD = cmd;
-
-            @(posedge CLK);
-            @(posedge CLK);
-            if(RES_dut!=={2*8{1'bx}}) begin
-                 f=1;
-                 test_count = test_count + 1;
-                 $display("[FAIL] %s: OPA=0x%h OPB=0x%h CMD=0x%h",test_name, a, b, cmd);
-                 fail_count = fail_count + 1;
-                 display_mismatch();
+task apply_test_mul(
+    input [7:0] a, b,
+    input [3:0] cmd,
+    input [80*8:1] test_name
+);
+    begin
+        @(posedge CLK);
+        OPA = a; OPB = b; CMD = cmd;
+        @(posedge CLK);
+        @(posedge CLK);
+        if (RES_dut !== {2*8{1'bx}}) begin
+            test_count = test_count + 1;
+            if (compare_outputs(COUT_dut, COUT_ref)) begin
+                $display("[PASS] %s: OPA=0x%h OPB=0x%h CMD=0x%h", test_name, a, b, cmd);
+                pass_count = pass_count + 1;
             end else begin
+                $display("[FAIL] %s: OPA=0x%h OPB=0x%h CMD=0x%h", test_name, a, b, cmd);
+                fail_count = fail_count + 1;
+            end
+            display_mismatch();
+        end else begin
             @(posedge CLK);
             test_count = test_count + 1;
-                if (f==0) begin
-                    if (compare_outputs(COUT_dut, COUT_ref)) begin
-                        $display("[PASS] %s: OPA=0x%h OPB=0x%h CMD=0x%h",test_name, a, b, cmd);
-                        pass_count = pass_count + 1;
-                        display_mismatch();
-                    end else begin
-                        $display("[FAIL] %s: OPA=0x%h OPB=0x%h CMD=0x%h",test_name, a, b, cmd);
-                        display_mismatch();
-                        fail_count = fail_count + 1;
-                    end
-                end
+            if (compare_outputs(COUT_dut, COUT_ref)) begin
+                $display("[PASS] %s: OPA=0x%h OPB=0x%h CMD=0x%h", test_name, a, b, cmd);
+                pass_count = pass_count + 1;
+            end else begin
+                $display("[FAIL] %s: OPA=0x%h OPB=0x%h CMD=0x%h", test_name, a, b, cmd);
+                fail_count = fail_count + 1;
             end
+            display_mismatch();
         end
-    endtask
+    end
+endtask
 
     // Apply test and check
     task apply_test(
@@ -326,13 +321,11 @@ task test_mult();
         begin
             compare_outputs = 1;
 
-            // Compare RES (handle Z values)
             if (RES_dut !== RES_ref) begin
                 if (!((RES_dut === 8'hxx) && (RES_ref === 8'hxx)))
                     compare_outputs = 0;
             end
-
-            // Compare flags (handle Z values)
+            
             if (!compare_bit(COUT_dut, COUT_ref)) compare_outputs = 0;
             if (!compare_bit(OFLOW_dut, OFLOW_ref)) compare_outputs = 0;
             if (!compare_bit(G_dut, G_ref)) compare_outputs = 0;
