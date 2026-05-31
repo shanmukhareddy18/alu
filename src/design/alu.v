@@ -1,11 +1,11 @@
 `timescale 1ns / 1ps
 
-module alu #(parameter n=8,c=4)(A,B,CIN,CLK,RST,CMD,CE,MODE,INP_VALID,Cout,Oflow,result,g,l,e,error);
+module alu #(parameter n=8,c=4)(A,B,cin,CLK,RST,cmd,CE,MODE,inp_valid,Cout,Oflow,result,g,l,e,error);
 localparam RW = $clog2(n);
 input [n-1:0] A,B;
-input CLK,RST,CE,MODE,CIN;
- input [1:0]INP_VALID;
-	input [c-1:0] CMD;
+input CLK,RST,CE,MODE,cin;
+ input [1:0]inp_valid;
+	input [c-1:0] cmd;
  output reg [(2*n)-1:0] result;
 output reg Cout ;
 output reg Oflow;
@@ -13,15 +13,19 @@ output reg g;
 output reg e ;
 output reg l ;
 output reg error ;
-   reg [n-1:0] OPA,OPB;
-   reg [(2*n)-1:0] RES ;
-   reg COUT ;
-   reg OFLOW;
-   reg G;
-   reg E ;
-   reg L ;
-  reg ERR ;
-reg [2:0]cnt=0;
+reg [2:0]cnt;
+   reg [n-1:0] OPA=0,OPB=0;
+   reg CIN=0;
+   reg [(2*n)-1:0] RES=0 ;
+   reg COUT =0;
+   reg OFLOW=0;
+   reg [1:0]INP_VALID=0;
+   reg G=0;
+   reg E =0;
+   reg L=0 ;
+   reg [c-1:0]CMD=0;
+  reg ERR =0;
+  reg compute;
 reg signed [(2*n)-1:0]sres;
   reg signed [n-1:0] SOPA, SOPB;
 always@(posedge CLK)
@@ -41,26 +45,28 @@ begin
     begin
         if(CE)
          begin
-           if (MODE && (CMD == 4'd9 || CMD == 4'd10))
+          compute<=1;
+           if (MODE && (cmd == 4'd9 || cmd == 4'd10))
             begin
               if (cnt == 0) begin
                 OPA <= A;
                 OPB <= B;
                 SOPA <= A;
                 SOPB <= B;
+                INP_VALID<=inp_valid;
                 cnt <= 1;
+                CMD<=cmd;
                 end
-               else if (cnt == 1) begin
-                  cnt <= 2;
-                 end
-               else if (cnt == 2) 
-                begin
-                        result <= RES;
-                        Cout   <= COUT;
-                        Oflow  <= OFLOW;
-                        g <= G; l <= L; e <= E;
-                        error <= ERR;
-                        cnt<=0;
+               else if (cnt == 1)
+                   cnt<=2;
+                else
+                 begin
+                  result <= RES;
+                Cout   <= COUT;
+                Oflow  <= OFLOW;
+                g <= G; l <= L; e <= E;
+                error <= ERR;
+                cnt<=0;
                  end
               end 
            else 
@@ -69,6 +75,9 @@ begin
                  OPB<=B;
                  SOPA<=A;
                  SOPB<=B;
+                 CMD<=cmd;
+                 CIN<=cin;
+                 INP_VALID<=inp_valid;
                 result<=RES;
                 g<=G;
                 l<=L;
@@ -77,6 +86,7 @@ begin
                 Cout<=COUT;
                 Oflow<=OFLOW;
                 cnt<=0;
+                
             end
        end
        end
@@ -84,7 +94,9 @@ begin
  
     always@(*)
       begin
-          G=0;
+      if(compute==1)
+      begin
+         G=0;
           L=0;
           E=0;
           COUT=0;
@@ -100,8 +112,9 @@ begin
 			         RES=OPA+OPB;  
 			         COUT=RES[n];
 			       end
-			      else
+			      else begin
 			        ERR=1;
+			        $display("error"); end
 			     4'd1:
 			       if(INP_VALID==2'b11)
 			       begin
@@ -301,5 +314,7 @@ begin
 					default: ERR=1;
                   endcase
               end
-           end
+        end 
+    
+        end 
  endmodule
